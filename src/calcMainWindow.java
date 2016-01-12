@@ -58,8 +58,8 @@ public class calcMainWindow {
 	//Declared objects for use
 	private JComboBox cBoxRoomType;
 	private JTabbedPane tabbedPane;
-	private JFormattedTextField formatTxtWalls;
 	private JFormattedTextField formatTxtWindows;
+	private JFormattedTextField formatTxtWalls;
 	private JFormattedTextField formatTxtDoors;
 	private JFormattedTextField formatTxtRoomSize;
 	
@@ -95,7 +95,7 @@ public class calcMainWindow {
 	private void initialize() {
 		frmWonderHowMuch = new JFrame();
 		frmWonderHowMuch.setTitle("Wonder how much it might cost?");
-		frmWonderHowMuch.setBounds(100, 100, 636, 570);
+		frmWonderHowMuch.setBounds(100, 100, 650, 544);
 		frmWonderHowMuch.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		JLabel lblInput = new JLabel("Enter details here");
@@ -127,6 +127,7 @@ public class calcMainWindow {
 						int walls = Integer.parseInt( formatTxtWalls.getText() );
 						int windows = Integer.parseInt( formatTxtWindows.getText() );
 						int doors = Integer.parseInt( formatTxtDoors.getText() );
+						
 						total = ( walls * prices[0] ) +
 								( windows * prices[1] ) +
 								(doors * prices[2] );
@@ -142,6 +143,7 @@ public class calcMainWindow {
 					case 1:
 					{
 						int roomSize = Integer.parseInt( formatTxtRoomSize.getText() );
+
 						total = roomSize * prices[3];
 						tableModel.addRow ( new Object[] {
 								name,
@@ -169,35 +171,33 @@ public class calcMainWindow {
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.TRAILING)
 				.addGroup(groupLayout.createSequentialGroup()
-					.addContainerGap()
 					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addComponent(lblInput)
 						.addGroup(groupLayout.createSequentialGroup()
-							.addComponent(pnlInput, GroupLayout.PREFERRED_SIZE, 281, GroupLayout.PREFERRED_SIZE)
-							.addGap(18)
-							.addComponent(pnlDebug, GroupLayout.PREFERRED_SIZE, 298, GroupLayout.PREFERRED_SIZE)))
-					.addContainerGap(19, Short.MAX_VALUE))
-				.addGroup(groupLayout.createSequentialGroup()
-					.addGap(124)
-					.addComponent(btnAdd)
-					.addContainerGap(449, Short.MAX_VALUE))
-				.addGroup(groupLayout.createSequentialGroup()
-					.addContainerGap()
-					.addComponent(scrollDisplay, GroupLayout.DEFAULT_SIZE, 625, Short.MAX_VALUE)
-					.addContainerGap())
-				.addGroup(groupLayout.createSequentialGroup()
-					.addGap(15)
-					.addComponent(lblEstimatedCost, GroupLayout.PREFERRED_SIZE, 148, GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(ComponentPlacement.UNRELATED)
-					.addComponent(txtLblEstimatedCost, GroupLayout.PREFERRED_SIZE, 171, GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(ComponentPlacement.RELATED, 99, Short.MAX_VALUE)
-					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addComponent(btnUncheck)
+							.addContainerGap()
+							.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+								.addComponent(lblInput)
+								.addGroup(groupLayout.createSequentialGroup()
+									.addComponent(pnlInput, GroupLayout.PREFERRED_SIZE, 281, GroupLayout.PREFERRED_SIZE)
+									.addGap(18)
+									.addComponent(pnlDebug, GroupLayout.PREFERRED_SIZE, 298, GroupLayout.PREFERRED_SIZE))))
 						.addGroup(groupLayout.createSequentialGroup()
-							.addComponent(btnDelete)
+							.addGap(124)
+							.addComponent(btnAdd)
+							.addPreferredGap(ComponentPlacement.RELATED, 281, Short.MAX_VALUE)
+							.addComponent(btnUncheck)
 							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(btnCheck)))
-					.addGap(43))
+							.addComponent(btnCheck))
+						.addGroup(groupLayout.createSequentialGroup()
+							.addContainerGap()
+							.addComponent(scrollDisplay, GroupLayout.DEFAULT_SIZE, 614, Short.MAX_VALUE))
+						.addGroup(Alignment.TRAILING, groupLayout.createSequentialGroup()
+							.addGap(15)
+							.addComponent(lblEstimatedCost, GroupLayout.PREFERRED_SIZE, 148, GroupLayout.PREFERRED_SIZE)
+							.addPreferredGap(ComponentPlacement.UNRELATED)
+							.addComponent(txtLblEstimatedCost, GroupLayout.PREFERRED_SIZE, 171, GroupLayout.PREFERRED_SIZE)
+							.addGap(217)
+							.addComponent(btnDelete)))
+					.addContainerGap())
 		);
 		groupLayout.setVerticalGroup(
 			groupLayout.createParallelGroup(Alignment.TRAILING)
@@ -209,21 +209,19 @@ public class calcMainWindow {
 						.addComponent(pnlDebug, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
 						.addComponent(pnlInput, GroupLayout.PREFERRED_SIZE, 191, Short.MAX_VALUE))
 					.addGap(1)
-					.addComponent(btnAdd)
+					.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
+						.addComponent(btnAdd)
+						.addComponent(btnCheck)
+						.addComponent(btnUncheck))
 					.addGap(4)
 					.addComponent(scrollDisplay, GroupLayout.PREFERRED_SIZE, 208, GroupLayout.PREFERRED_SIZE)
 					.addPreferredGap(ComponentPlacement.RELATED)
 					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addGroup(groupLayout.createSequentialGroup()
-							.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-								.addComponent(btnDelete)
-								.addComponent(btnCheck))
-							.addPreferredGap(ComponentPlacement.UNRELATED)
-							.addComponent(btnUncheck))
+						.addComponent(btnDelete)
 						.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
 							.addComponent(lblEstimatedCost)
 							.addComponent(txtLblEstimatedCost, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)))
-					.addGap(97))
+					.addGap(131))
 		);
 		
 		
@@ -319,23 +317,22 @@ public class calcMainWindow {
 		
 		JLabel lblDoors = new JLabel("Doors/Doorways:");
 		
-		/*JFormattedTextField*/ formatTxtWalls = new JFormattedTextField( createFormatter( "####" ) );
- formatTxtWalls.setText("0");
- formatTxtWalls.setFocusLostBehavior(JFormattedTextField.COMMIT);
-		lblWalls.setLabelFor(formatTxtWalls);
-		formatTxtWalls.setHorizontalAlignment(SwingConstants.RIGHT);
-		
-		/*JFormattedTextField*/ formatTxtWindows = new JFormattedTextField( createFormatter( "####" ) );
- formatTxtWindows.setText("0");
- formatTxtWindows.setFocusLostBehavior(JFormattedTextField.COMMIT);
+		/*JFormattedTextField*/ formatTxtWindows = new JFormattedTextField( /*createFormatter( "####" )*/ );
+		formatTxtWindows.setText("0");
+		formatTxtWindows.setFocusLostBehavior(JFormattedTextField.COMMIT);
 		lblWindows.setLabelFor(formatTxtWindows);
 		formatTxtWindows.setHorizontalAlignment(SwingConstants.RIGHT);
 		
-		/*JFormattedTextField*/ formatTxtDoors = new JFormattedTextField( createFormatter( "####" ) );
- formatTxtDoors.setText("0");
- formatTxtDoors.setFocusLostBehavior(JFormattedTextField.COMMIT);
+		/*JFormattedTextField*/ formatTxtDoors = new JFormattedTextField( /*createFormatter( "####" )*/ );
+		formatTxtDoors.setText("0");
+		formatTxtDoors.setFocusLostBehavior(JFormattedTextField.COMMIT);
 		lblDoors.setLabelFor(formatTxtDoors);
 		formatTxtDoors.setHorizontalAlignment(SwingConstants.RIGHT);
+		
+		/*JFormattedTextField*/ formatTxtWalls = new JFormattedTextField();
+		formatTxtWalls.setHorizontalAlignment(SwingConstants.RIGHT);
+		formatTxtWalls.setFocusLostBehavior(JFormattedTextField.PERSIST);
+		formatTxtWalls.setText("0");
 		GroupLayout gl_tabInputSurfaces = new GroupLayout(tabInputSurfaces);
 		gl_tabInputSurfaces.setHorizontalGroup(
 			gl_tabInputSurfaces.createParallelGroup(Alignment.LEADING)
@@ -347,10 +344,10 @@ public class calcMainWindow {
 						.addComponent(lblDoors))
 					.addGap(47)
 					.addGroup(gl_tabInputSurfaces.createParallelGroup(Alignment.LEADING, false)
+						.addComponent(formatTxtWalls)
 						.addComponent(formatTxtDoors)
-						.addComponent(formatTxtWalls, Alignment.TRAILING)
 						.addComponent(formatTxtWindows, GroupLayout.DEFAULT_SIZE, 56, Short.MAX_VALUE))
-					.addContainerGap(38, Short.MAX_VALUE))
+					.addContainerGap(59, Short.MAX_VALUE))
 		);
 		gl_tabInputSurfaces.setVerticalGroup(
 			gl_tabInputSurfaces.createParallelGroup(Alignment.LEADING)
@@ -367,7 +364,7 @@ public class calcMainWindow {
 					.addGroup(gl_tabInputSurfaces.createParallelGroup(Alignment.BASELINE)
 						.addComponent(lblDoors)
 						.addComponent(formatTxtDoors, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-					.addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+					.addContainerGap(19, Short.MAX_VALUE))
 		);
 		tabInputSurfaces.setLayout(gl_tabInputSurfaces);
 		
