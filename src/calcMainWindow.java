@@ -1,9 +1,11 @@
+import java.text.DecimalFormat;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.LayoutStyle.ComponentPlacement;
 
@@ -62,6 +64,7 @@ public class calcMainWindow {
 	private JFormattedTextField formatTxtWalls;
 	private JFormattedTextField formatTxtDoors;
 	private JFormattedTextField formatTxtRoomSize;
+	private DefaultTableModel tableModel;
 	
 	//Set prices=> no. of walls, windows, doors, price per metre
 	static final int prices[] = {200,100,150, 35};
@@ -95,7 +98,7 @@ public class calcMainWindow {
 	private void initialize() {
 		frmWonderHowMuch = new JFrame();
 		frmWonderHowMuch.setTitle("Wonder how much it might cost?");
-		frmWonderHowMuch.setBounds(100, 100, 650, 544);
+		frmWonderHowMuch.setBounds(100, 100, 650, 571);
 		frmWonderHowMuch.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		JLabel lblInput = new JLabel("Enter details here");
@@ -103,59 +106,123 @@ public class calcMainWindow {
 		JPanel pnlInput = new JPanel();
 		
 		JButton btnDelete = new JButton("Delete");
+		btnDelete.addMouseListener(new MouseAdapter() {
+			//Delete selected rooms from calculator
+			@Override
+			public void mousePressed(MouseEvent arg0)
+			{	 
+				//int debugWatch = tableRoomDisplay.getRowCount();
+				for( int i = 0; i < tableRoomDisplay.getRowCount(); i++)
+				{
+					if( ((boolean) (tableRoomDisplay.getValueAt( i, 4))) == true )
+					{
+						tableModel.removeRow( i );
+					}
+				}
+				updateEstimate();
+			}
+		});
 		
 		JButton btnUncheck = new JButton("Uncheck All");
-		
-		JButton btnCheck = new JButton("Check All");
-		
-		JLabel lblEstimatedCost = new JLabel("Estimated Cost: (NZD) $");
-		
-		//Add Room to list
-		JButton btnAdd = new JButton("Add");
-		btnAdd.addMouseListener(new MouseAdapter() {
+		btnUncheck.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent arg0)
+			public void mousePressed(MouseEvent e) 
 			{
-				String name = txtRoomName.getText();
-				String type = (String) cBoxRoomType.getSelectedItem();
-				DefaultTableModel tableModel = (DefaultTableModel) tableRoomDisplay.getModel();
-				double total = 0;
-				
-				switch( (tabbedPane.getSelectedIndex() ) ){
-					case 0:
-					{
-						int walls = Integer.parseInt( formatTxtWalls.getText() );
-						int windows = Integer.parseInt( formatTxtWindows.getText() );
-						int doors = Integer.parseInt( formatTxtDoors.getText() );
-						
-						total = ( walls * prices[0] ) +
-								( windows * prices[1] ) +
-								(doors * prices[2] );
-						
-						tableModel.addRow ( new Object[] {
-								name,
-								type,
-								"Walls: "+walls+",Windows: "+windows+",Doors: "+doors,
-								total,
-						});
-						break;
-					}
-					case 1:
-					{
-						int roomSize = Integer.parseInt( formatTxtRoomSize.getText() );
-
-						total = roomSize * prices[3];
-						tableModel.addRow ( new Object[] {
-								name,
-								type,
-								"Size is: "+roomSize+" sq. metres",
-								total,
-						});
-						break;
-					}
+				for( int i = 0; i < tableRoomDisplay.getRowCount(); i++)
+				{
+					tableModel.setValueAt( false, i, 4);
 				}
 			}
 		});
+		
+		JButton btnCheck = new JButton("Check All");
+		btnCheck.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e)
+			{
+				for( int i = 0; i < tableRoomDisplay.getRowCount(); i++)
+				{
+					tableModel.setValueAt( true, i, 4);
+				}
+			}
+		});
+		
+		JLabel lblEstimatedCost = new JLabel("Estimated Cost: (NZD)");
+		
+		//Add Room to list
+		JButton btnAdd = new JButton("Add");
+		btnAdd.addMouseListener(new MouseAdapter()
+		{
+			@Override
+			public void mousePressed(MouseEvent arg0)
+			{
+				String name = txtRoomName.getText();
+				String type = (String) cBoxRoomType.getSelectedItem();
+				/*tableModel = (DefaultTableModel) tableRoomDisplay.getModel();*/
+				double total = 0;
+				
+				try {
+					switch( (tabbedPane.getSelectedIndex() ) ){
+						case 0:
+						{
+							int walls = Integer.parseInt( formatTxtWalls.getText() );
+							int windows = Integer.parseInt( formatTxtWindows.getText() );
+							int doors = Integer.parseInt( formatTxtDoors.getText() );
+							
+							total = ( walls * prices[0] ) +
+									( windows * prices[1] ) +
+									(doors * prices[2] );
+							
+							tableModel.addRow ( new Object[] {
+									name,
+									type,
+									"Walls: "+walls+",Windows: "+windows+",Doors: "+doors,
+									total,
+									false,
+							});
+							break;
+						}
+						case 1:
+						{
+							int roomSize = Integer.parseInt( formatTxtRoomSize.getText() );
+
+							total = roomSize * prices[3];
+							tableModel.addRow ( new Object[] {
+									name,
+									type,
+									"Size is: "+roomSize+" sq. metres",
+									total,
+									false,
+							});
+							break;
+						}
+					}
+				} catch (NumberFormatException e) {
+					JOptionPane.showMessageDialog(null,
+						    "You must only use numbers. Alphabets have no value to me",
+						    "Inane error",
+						    JOptionPane.ERROR_MESSAGE);
+					//e.printStackTrace();
+				}
+				//update Total estimate
+				updateEstimate();
+				//int totalRooms = tableRoomDisplay.getRowCount();
+				/*int currentTotalEstimate = 0;
+				DecimalFormat displayFormat = new DecimalFormat("$#.00");
+				displayFormat.setGroupingUsed(true);
+				displayFormat.setGroupingSize(3);
+				
+				for( int i = 0; i < tableRoomDisplay.getRowCount(); i++ )
+				{
+					//get the total of each room, removing commas and symbols
+					currentTotalEstimate += ( Integer.parseInt(tableRoomDisplay.getValueAt( i , 3 ).toString().replaceAll("[\\D]", "" )) );
+				}
+				String costText = displayFormat.format( currentTotalEstimate );
+
+				txtLblEstimatedCost.setText( costText );*/
+			}
+		}
+		);
 		
 		JScrollPane scrollDisplay = new JScrollPane();
 		scrollDisplay.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -164,7 +231,7 @@ public class calcMainWindow {
 		JPanel pnlDebug = new JPanel();
 		
 		txtLblEstimatedCost = new JTextField();
-		txtLblEstimatedCost.setEnabled(false);
+		txtLblEstimatedCost.setText("0.00");
 		txtLblEstimatedCost.setEditable(false);
 		txtLblEstimatedCost.setColumns(10);
 		GroupLayout groupLayout = new GroupLayout(frmWonderHowMuch.getContentPane());
@@ -243,6 +310,10 @@ public class calcMainWindow {
 				return columnTypes[columnIndex];
 			}
 		});
+		//==========================================================
+		tableModel = (DefaultTableModel) tableRoomDisplay.getModel();
+		//===========================================================
+		
 		tableRoomDisplay.getColumnModel().getColumn(0).setResizable(false);
 		tableRoomDisplay.getColumnModel().getColumn(0).setPreferredWidth(90);
 		tableRoomDisplay.getColumnModel().getColumn(0).setMinWidth(45);
@@ -276,19 +347,19 @@ public class calcMainWindow {
 		txtRoomName.setColumns(10);
 		GroupLayout gl_pnlInput = new GroupLayout(pnlInput);
 		gl_pnlInput.setHorizontalGroup(
-			gl_pnlInput.createParallelGroup(Alignment.LEADING)
-				.addGroup(Alignment.TRAILING, gl_pnlInput.createSequentialGroup()
+			gl_pnlInput.createParallelGroup(Alignment.TRAILING)
+				.addGroup(gl_pnlInput.createSequentialGroup()
 					.addContainerGap()
 					.addGroup(gl_pnlInput.createParallelGroup(Alignment.TRAILING)
 						.addComponent(tabbedPane, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 257, Short.MAX_VALUE)
-						.addGroup(gl_pnlInput.createSequentialGroup()
-							.addComponent(lblRoomType)
+						.addGroup(Alignment.LEADING, gl_pnlInput.createSequentialGroup()
+							.addGroup(gl_pnlInput.createParallelGroup(Alignment.LEADING)
+								.addComponent(lblRoomType)
+								.addComponent(lblRoomName))
 							.addPreferredGap(ComponentPlacement.UNRELATED)
-							.addComponent(cBoxRoomType, 0, 180, Short.MAX_VALUE))
-						.addGroup(gl_pnlInput.createSequentialGroup()
-							.addComponent(lblRoomName)
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(txtRoomName, GroupLayout.DEFAULT_SIZE, 183, Short.MAX_VALUE)))
+							.addGroup(gl_pnlInput.createParallelGroup(Alignment.LEADING)
+								.addComponent(txtRoomName, GroupLayout.DEFAULT_SIZE, 180, Short.MAX_VALUE)
+								.addComponent(cBoxRoomType, 0, 180, Short.MAX_VALUE))))
 					.addContainerGap())
 		);
 		gl_pnlInput.setVerticalGroup(
@@ -486,7 +557,26 @@ public class calcMainWindow {
 				System.exit( -1 );
 			}
 		return formatter;
-	}	
+	}
+	
+	private void updateEstimate()
+	{
+	//update Total estimate
+	//int totalRooms = tableRoomDisplay.getRowCount();
+		int currentTotalEstimate = 0;
+		DecimalFormat displayFormat = new DecimalFormat("$#.00");
+		displayFormat.setGroupingUsed(true);
+		displayFormat.setGroupingSize(3);
+		
+		for( int i = 0; i < tableRoomDisplay.getRowCount(); i++ )
+		{
+			//get the total of each room, removing commas and symbols
+			currentTotalEstimate += ( Integer.parseInt(tableRoomDisplay.getValueAt( i , 3 ).toString().replaceAll("[\\D]", "" )) );
+		}
+		String costText = displayFormat.format( currentTotalEstimate );
+	
+		txtLblEstimatedCost.setText( costText );
+	}
 }
 
 
