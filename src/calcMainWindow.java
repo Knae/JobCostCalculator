@@ -1,4 +1,9 @@
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DecimalFormat;
+import java.io.*;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
@@ -67,8 +72,11 @@ public class calcMainWindow {
 	private DefaultTableModel tableModel;
 	
 	//Set prices=> no. of walls, windows, doors, price per metre
-	static final int prices[] = {200,100,150, 35};
+	private int prices[] = { 200, 100, 150, 35};
 
+	//Constants
+	static Charset usedSet = Charset.forName("UTF-16");
+	
 	/**
 	 * Launch the application.
 	 */
@@ -96,6 +104,26 @@ public class calcMainWindow {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
+		URL dataFile = calcMainWindow.class.getResource( "Data" );
+		File readData = new File( dataFile.getFile() );
+		try (
+				BufferedReader reader = new BufferedReader( 
+											new FileReader( readData )													
+										)
+				)
+		{
+		    String line = null;
+		    while ((line = reader.readLine()) != null) 
+		    {
+		        if( !( line.startsWith( "//" ) ) ) {
+					System.out.println(line);
+				}
+		    }
+		} catch (IOException x) 
+			{
+			    System.err.format("IOException: %s%n", x);
+			}
+		
 		frmWonderHowMuch = new JFrame();
 		frmWonderHowMuch.setTitle("Wonder how much it might cost?");
 		frmWonderHowMuch.setBounds(100, 100, 650, 571);
@@ -111,12 +139,35 @@ public class calcMainWindow {
 			@Override
 			public void mousePressed(MouseEvent arg0)
 			{	 
+				Boolean deleteCheck = false;
 				//int debugWatch = tableRoomDisplay.getRowCount();
+			initialSearch:
 				for( int i = 0; i < tableRoomDisplay.getRowCount(); i++)
 				{
 					if( ((boolean) (tableRoomDisplay.getValueAt( i, 4))) == true )
 					{
 						tableModel.removeRow( i );
+						deleteCheck = true;
+						break initialSearch;
+					}
+					else
+						deleteCheck = false;
+				}
+				
+				//repeat search, each time a checked box is found
+				while( deleteCheck )
+				{
+				repeatSearch:
+					for( int i = 0; i < tableRoomDisplay.getRowCount(); i++)
+					{
+						if( ((boolean) (tableRoomDisplay.getValueAt( i, 4))) == true )
+						{
+							tableModel.removeRow( i );
+							deleteCheck = true;
+							break repeatSearch;
+						}
+						else
+							deleteCheck = false;
 					}
 				}
 				updateEstimate();
@@ -231,64 +282,81 @@ public class calcMainWindow {
 		JPanel pnlDebug = new JPanel();
 		
 		txtLblEstimatedCost = new JTextField();
-		txtLblEstimatedCost.setText("0.00");
+		txtLblEstimatedCost.setText("$0.00");
 		txtLblEstimatedCost.setEditable(false);
 		txtLblEstimatedCost.setColumns(10);
+		
+		JButton btnSave = new JButton("Save");
+		
+		JButton btnLoad = new JButton("Load");
 		GroupLayout groupLayout = new GroupLayout(frmWonderHowMuch.getContentPane());
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.TRAILING)
 				.addGroup(groupLayout.createSequentialGroup()
-					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+					.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
 						.addGroup(groupLayout.createSequentialGroup()
 							.addContainerGap()
-							.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-								.addComponent(lblInput)
-								.addGroup(groupLayout.createSequentialGroup()
-									.addComponent(pnlInput, GroupLayout.PREFERRED_SIZE, 281, GroupLayout.PREFERRED_SIZE)
-									.addGap(18)
-									.addComponent(pnlDebug, GroupLayout.PREFERRED_SIZE, 298, GroupLayout.PREFERRED_SIZE))))
-						.addGroup(groupLayout.createSequentialGroup()
-							.addGap(124)
-							.addComponent(btnAdd)
-							.addPreferredGap(ComponentPlacement.RELATED, 281, Short.MAX_VALUE)
-							.addComponent(btnUncheck)
+							.addComponent(btnSave)
 							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(btnCheck))
-						.addGroup(groupLayout.createSequentialGroup()
-							.addContainerGap()
-							.addComponent(scrollDisplay, GroupLayout.DEFAULT_SIZE, 614, Short.MAX_VALUE))
-						.addGroup(Alignment.TRAILING, groupLayout.createSequentialGroup()
-							.addGap(15)
-							.addComponent(lblEstimatedCost, GroupLayout.PREFERRED_SIZE, 148, GroupLayout.PREFERRED_SIZE)
-							.addPreferredGap(ComponentPlacement.UNRELATED)
-							.addComponent(txtLblEstimatedCost, GroupLayout.PREFERRED_SIZE, 171, GroupLayout.PREFERRED_SIZE)
-							.addGap(217)
-							.addComponent(btnDelete)))
-					.addContainerGap())
+							.addComponent(btnLoad)
+							.addPreferredGap(ComponentPlacement.RELATED)
+							.addComponent(btnDelete))
+						.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+							.addGroup(groupLayout.createSequentialGroup()
+								.addContainerGap()
+								.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
+									.addGroup(groupLayout.createSequentialGroup()
+										.addComponent(btnUncheck)
+										.addPreferredGap(ComponentPlacement.RELATED)
+										.addComponent(btnCheck))
+									.addGroup(groupLayout.createSequentialGroup()
+										.addComponent(pnlInput, GroupLayout.PREFERRED_SIZE, 281, GroupLayout.PREFERRED_SIZE)
+										.addPreferredGap(ComponentPlacement.RELATED)
+										.addComponent(pnlDebug, GroupLayout.PREFERRED_SIZE, 298, GroupLayout.PREFERRED_SIZE))))
+							.addGroup(groupLayout.createSequentialGroup()
+								.addGap(124)
+								.addComponent(btnAdd))
+							.addGroup(groupLayout.createSequentialGroup()
+								.addGap(20)
+								.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+									.addComponent(scrollDisplay, GroupLayout.DEFAULT_SIZE, 575, Short.MAX_VALUE)
+									.addGroup(groupLayout.createSequentialGroup()
+										.addComponent(lblEstimatedCost, GroupLayout.PREFERRED_SIZE, 142, GroupLayout.PREFERRED_SIZE)
+										.addPreferredGap(ComponentPlacement.RELATED)
+										.addComponent(txtLblEstimatedCost, GroupLayout.PREFERRED_SIZE, 171, GroupLayout.PREFERRED_SIZE))))))
+					.addGap(47))
+				.addGroup(Alignment.LEADING, groupLayout.createSequentialGroup()
+					.addContainerGap()
+					.addComponent(lblInput)
+					.addContainerGap(547, Short.MAX_VALUE))
 		);
 		groupLayout.setVerticalGroup(
 			groupLayout.createParallelGroup(Alignment.TRAILING)
 				.addGroup(groupLayout.createSequentialGroup()
-					.addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+					.addContainerGap()
 					.addComponent(lblInput)
 					.addPreferredGap(ComponentPlacement.RELATED)
-					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
-						.addComponent(pnlDebug, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-						.addComponent(pnlInput, GroupLayout.PREFERRED_SIZE, 191, Short.MAX_VALUE))
-					.addGap(1)
+					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+						.addGroup(groupLayout.createSequentialGroup()
+							.addComponent(pnlInput, GroupLayout.PREFERRED_SIZE, 214, Short.MAX_VALUE)
+							.addGap(1))
+						.addGroup(groupLayout.createSequentialGroup()
+							.addComponent(pnlDebug, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+							.addPreferredGap(ComponentPlacement.RELATED)))
 					.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
 						.addComponent(btnAdd)
 						.addComponent(btnCheck)
 						.addComponent(btnUncheck))
-					.addGap(4)
+					.addPreferredGap(ComponentPlacement.RELATED)
 					.addComponent(scrollDisplay, GroupLayout.PREFERRED_SIZE, 208, GroupLayout.PREFERRED_SIZE)
 					.addPreferredGap(ComponentPlacement.RELATED)
-					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+					.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
 						.addComponent(btnDelete)
-						.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-							.addComponent(lblEstimatedCost)
-							.addComponent(txtLblEstimatedCost, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)))
-					.addGap(131))
+						.addComponent(btnLoad)
+						.addComponent(btnSave)
+						.addComponent(lblEstimatedCost)
+						.addComponent(txtLblEstimatedCost, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+					.addGap(136))
 		);
 		
 		
