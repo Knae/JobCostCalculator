@@ -6,6 +6,7 @@ import java.text.DecimalFormat;
 import java.io.*;
 import java.awt.EventQueue;
 
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
@@ -77,6 +78,10 @@ public class calcMainWindow {
 	//Constants
 	static Charset usedSet = Charset.forName("UTF-16");
 	
+	//FileChooser for file manipulation
+	final JFileChooser fcSave = new JFileChooser( System.getProperty( "user.home" ) + "/Desktop" );
+	final JFileChooser fcOpen = new JFileChooser( System.getProperty( "user.home" ) + "/Desktop" );
+	
 	/**
 	 * Launch the application.
 	 */
@@ -104,6 +109,9 @@ public class calcMainWindow {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
+		//===================================================================
+		//Get prices from data file
+		//===================================================================
 		URL dataFile = calcMainWindow.class.getResource( "Data" );
 		File readData = new File( dataFile.getFile() );
 		try (
@@ -113,17 +121,50 @@ public class calcMainWindow {
 				)
 		{
 		    String line = null;
+		    String pricesTemp[] = {"","","",""};
 		    while ((line = reader.readLine()) != null) 
 		    {
+				System.out.println(line);
 		        if( !( line.startsWith( "//" ) ) ) {
-					System.out.println(line);
+					pricesTemp = line.split(";");
+	        		if ( pricesTemp.length == 4 ) 
+	        		{
+						for (int i = 0; i < 4; i++)
+						{
+							prices[ i ] = Integer.parseInt( pricesTemp[ i ] );
+							System.out.print( prices[ i ] + ";" );
+						}
+						System.out.println( "" );
+					}
+	        		else
+	        		{
+	        			System.out.println( "Not enough inputs in file " );
+	        		}
 				}
 		    }
+		    reader.close();
 		} catch (IOException x) 
 			{
-			    System.err.format("IOException: %s%n", x);
+				//Assuming file doesn't exist, create one
+				try(
+					BufferedWriter writer = new BufferedWriter( 
+												new FileWriter( readData )
+												) 
+				)
+				{
+					writer.write( "//walls,windows,doors,pricePerMetre" );
+					writer.newLine();
+					for (int i = 0; i < 4; i++)
+					{
+						writer.write( prices[ i ] + ";" );						
+					}
+					writer.close();
+				} catch (IOException e1) {
+					System.err.format("IOException: %s%n", x);
+				};
+				System.out.println( "new data file created" );
 			}
-		
+		//======================================================================
 		frmWonderHowMuch = new JFrame();
 		frmWonderHowMuch.setTitle("Wonder how much it might cost?");
 		frmWonderHowMuch.setBounds(100, 100, 650, 571);
@@ -148,6 +189,8 @@ public class calcMainWindow {
 					{
 						tableModel.removeRow( i );
 						deleteCheck = true;
+						if( i == tableRoomDisplay.getRowCount() )
+							deleteCheck = false;
 						break initialSearch;
 					}
 					else
@@ -257,20 +300,6 @@ public class calcMainWindow {
 				}
 				//update Total estimate
 				updateEstimate();
-				//int totalRooms = tableRoomDisplay.getRowCount();
-				/*int currentTotalEstimate = 0;
-				DecimalFormat displayFormat = new DecimalFormat("$#.00");
-				displayFormat.setGroupingUsed(true);
-				displayFormat.setGroupingSize(3);
-				
-				for( int i = 0; i < tableRoomDisplay.getRowCount(); i++ )
-				{
-					//get the total of each room, removing commas and symbols
-					currentTotalEstimate += ( Integer.parseInt(tableRoomDisplay.getValueAt( i , 3 ).toString().replaceAll("[\\D]", "" )) );
-				}
-				String costText = displayFormat.format( currentTotalEstimate );
-
-				txtLblEstimatedCost.setText( costText );*/
 			}
 		}
 		);
@@ -286,9 +315,15 @@ public class calcMainWindow {
 		txtLblEstimatedCost.setEditable(false);
 		txtLblEstimatedCost.setColumns(10);
 		
+		//Save and open files
+		//====================================================
 		JButton btnSave = new JButton("Save");
+		btnSave.addActionListener( new SaveFile() );
 		
 		JButton btnLoad = new JButton("Load");
+		btnLoad.addActionListener( new LoadFile() );
+		//====================================================
+		
 		GroupLayout groupLayout = new GroupLayout(frmWonderHowMuch.getContentPane());
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.TRAILING)
@@ -613,7 +648,7 @@ public class calcMainWindow {
 		//==================================================
 	}
 	
-	protected MaskFormatter createFormatter( String s )
+/*	protected MaskFormatter createFormatter( String s )
 	{
 		MaskFormatter formatter = null;
 		try 
@@ -625,25 +660,103 @@ public class calcMainWindow {
 				System.exit( -1 );
 			}
 		return formatter;
-	}
+	}*/
 	
 	private void updateEstimate()
 	{
 	//update Total estimate
 	//int totalRooms = tableRoomDisplay.getRowCount();
-		int currentTotalEstimate = 0;
+		double currentTotalEstimate = 0;
 		DecimalFormat displayFormat = new DecimalFormat("$#.00");
 		displayFormat.setGroupingUsed(true);
 		displayFormat.setGroupingSize(3);
 		
 		for( int i = 0; i < tableRoomDisplay.getRowCount(); i++ )
 		{
+			//double debugValue = (double) tableRoomDisplay.getValueAt( i , 3 );
 			//get the total of each room, removing commas and symbols
-			currentTotalEstimate += ( Integer.parseInt(tableRoomDisplay.getValueAt( i , 3 ).toString().replaceAll("[\\D]", "" )) );
+			currentTotalEstimate += ( (double) ( tableRoomDisplay.getValueAt( i , 3 ) ) );
 		}
 		String costText = displayFormat.format( currentTotalEstimate );
 	
 		txtLblEstimatedCost.setText( costText );
+	}
+	
+	class SaveFile implements ActionListener {
+		public void actionPerformed( ActionEvent e ) {
+			int returnValueFileChooser = fcSave.showSaveDialog( null );
+			
+			if( returnValueFileChooser == JFileChooser.APPROVE_OPTION )
+			{
+				File saveTarget = fcSave.getSelectedFile();
+				
+				try( BufferedWriter writer = new BufferedWriter( new FileWriter( saveTarget )) ) 
+				{
+					for( int i = 0; i < tableRoomDisplay.getRowCount(); i++)
+					{	
+						/*name,
+						type,
+						description
+						total,
+						delete?,*/
+						RoomObject tempRoom = new RoomObject( 
+								(String) tableRoomDisplay.getValueAt( i, 0),
+								(String) tableRoomDisplay.getValueAt( i, 1),
+								(String) tableRoomDisplay.getValueAt( i, 2),
+								(double) tableRoomDisplay.getValueAt( i, 3)
+								);
+						writer.write( 
+								tempRoom.getName() + ";" +
+								tempRoom.getType() + ";" +
+								tempRoom.getDesc() + ";" +
+								tempRoom.getTotal() + ";"
+								);
+						writer.newLine();
+
+					}
+				} catch (IOException x) {
+					System.err.format("IOException: %s%n", x);
+				} 
+				
+				System.out.println("Saved to: " + saveTarget.getAbsolutePath());
+			}
+		}
+	}
+	
+	class LoadFile implements ActionListener {
+		public void actionPerformed( ActionEvent e ) {
+			int returnValueFileChooser = fcOpen.showOpenDialog( null );
+			
+			if( returnValueFileChooser == JFileChooser.APPROVE_OPTION )
+			{
+				File openTarget = fcOpen.getSelectedFile();
+				try ( BufferedReader reader = new BufferedReader( new FileReader( openTarget ))	)
+				{
+				    String line = null;
+				    while ((line = reader.readLine()) != null) 
+				    {
+				        if( line != "" )
+				        {
+				        	String tempSpace[] = { "", "", "", ""};
+				        	tempSpace = line.split( ";" );
+				        	
+				        	tableModel.addRow ( new Object[] {
+									tempSpace[0],
+									tempSpace[1],
+									tempSpace[2],
+									Double.valueOf( tempSpace[3] ),
+									false,
+							});
+				        }
+				    }
+				    reader.close();
+				} catch (IOException x) 
+					{
+					    System.err.format("IOException: %s%n", x);
+					}
+				System.out.println("Open From : " + openTarget.getAbsolutePath());
+			}
+		}
 	}
 }
 
